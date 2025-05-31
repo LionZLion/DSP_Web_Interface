@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block style %}{% endblock %}
+
+{% block content %}
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filters</title>
+    <script src="https://cdn.plot.ly/plotly-3.0.1.min.js" charset="utf-8"></script>
+</head>
+
+<body>
+    <div class="main-container">
+        <div class="text-container">
+            <h1>Сигналы</h1>
+            <p>
+                В этом симуляторе вы можете генерировать различные типы сигналов.
+                Каждый из них обладает своими спектральными особенностями, 
+                которые можно наглядно изучить с помощью дискретного преобразования Фурье.
+            </p>
+            <p>
+                Для более глубокого понимания цифровой обработки вы можете настраивать 
+                параметры сигналов: частоту дискретизации и фазовый сдвиг.
+                Эти изменения позволяют наблюдать, как структура сигнала и его спектр зависят от параметров.
+            </p>
+            <p>
+                Особенно важно обратить внимание на влияние частоты дискретизации. 
+                Здесь вы можете увидеть проявление теоремы Котельникова,
+                согласно которой частота дискретизации должна быть как минимум в два раза выше максимальной частоты сигнала.
+                Если это условие не выполняется, возникают искажения, и сигнал теряет информативность.
+                Причём это наглядно видно на Фурье-спектре.
+            </p>
+            <p>
+                Например, при фазовом сдвиге, равном 0, и неподходящей частоте дискретизации, 
+                все отсчёты сигнала могут располагаться на одной или двух прямых.
+                В результате получаем сигнал, который визуально и спектрально кажется равным нулю – его нельзя наблюдать.
+            </p>
+            <p>
+                Также доступен линейный чирп-сигнал – сигнал, частота которого линейно изменяется во времени.
+                Можно наблюдать как расширяется основная частота на спектре.
+                Такой сигнал широко применяется в радиолокации, спектральном анализе и других задачах цифровой обработки.
+            </p>
+        </div>
+        
+        <div class="graph-object-container">
+            <div class="slidecontainer">
+                Тип сигнала:
+                <div class="button_list">
+                    <button class="type_signal selected" value="sine">Синус</button>
+                    <button class="type_signal" value="meandr">Меандр</button>
+                    <button class="type_signal" value="sawtooth">Пила</button>
+                    <button class="type_signal" value="triangle">Треугольник</button>
+                </div>
+                <p>
+                    <label for="frequency_slider">Частота: <b><span id="out_frequency"></span> Гц</b></label>
+                    <input type="range" min="1" max="20" value="5" class="slider" id="frequency_slider" step="1">
+                </p>
+                <p>
+                    <label for="frequency_sample">Частота дискретизации: <b><span id="fs_out"></span> Гц</b></label>
+                    <input type="range" min="1" max="200" value="200" class="slider" id="frequency_sample" step="1">
+                </p>
+                <p>
+                    <label for="phase_signal">Фаза: <b><span id="out_phase"></span> с</b></label>
+                    <input type="range" min="0.00" max="1" value="0" class="slider" id="phase_signal" step="0.01">
+                </p>
+                <p>
+                    <label for="chirp-button">Линейный чирп</label>
+                    <label class="switch">
+                        <input type="checkbox" id="chirp-button">
+                        <span class="toggle "></span>
+                    </label>               
+                </p>
+
+                <div class="hide" id="chirp-container">
+                    <p>
+                        <label for="chirp_slider">Линейный коэффициент: <b><span id="chirp_out"></span> Гц<sup>2</sup></b></label>
+                        <input type="range" min="1" max="20" value="2" class="slider" id="chirp_slider" step="1">
+                    </p>
+                </div>
+                <p>
+                    <label for="dft-button">Дискретное преобразование Фурье</label>
+                    <label class="switch">
+                        <input type="checkbox" id="dft-button">
+                        <span class="toggle "></span>
+                    </label>
+                </p>
+            </div>
+
+            <div class="graphcontainer">
+                <p>
+                    <div id="plot1"></div>
+                </p>
+            </div>
+        </div>
+        <div class="text-container">
+            <p>
+                Рассмотренные выше сигналы — периодические, и их используют 
+                для моделирования физических процессов.
+                Однако существует и другой класс сигналов – непериодические, сигналы состоящие из единичных импульсов.
+            </p>
+            <p>
+                Их спектры сильно отличаются от спектров периодических сигналов.
+                Например, идеальный дельта-импульс имеет равномерный спектр – он содержит все частоты с 
+                одинаковой амплитудой.
+                Периодические импульсы приводят к спектру, состоящему из гармоник с интервалом, 
+                обратно пропорциональным расстоянию между импульсами.
+            </p>
+        </div>
+        <!-- Второй график -->
+        <div class="graph-object-container">
+            <div class="graphcontainer">
+                <p>
+                    <div id="plot2"></div>
+                </p>
+            </div>
+
+            <div class="slidecontainer">
+                Тип импульса:
+                <div class="button_list">
+                    <button class="type_impuls selected" value="delta">Дельта</button>
+                    <button class="type_impuls" value="gauss">Гаусс</button>
+                    <button class="type_impuls" value="exponent">Экспонента</button>
+                    <button class="type_impuls" value="square">Квадратный</button>
+                    <button class="type_impuls" value="pulse_train">Импульсы</button>
+                    <button class="type_impuls" value="rand_pulse_train">Случайные импульсы</button>
+                </div>
+                <p>
+                    <label for="frequency-sample-imp">Частота дискретизации: <b><span id="fs_imp_out"></span> Гц</b></label>
+                    <input type="range" min="1" max="200" value="200" class="slider" id="frequency-sample-imp" step="1">
+                </p>
+                <p>
+                    <label for="phase_imp">Фаза: <b><span id="out_phas_imp"></span> с</b></label>
+                    <input type="range" min="0" max="1" value="0" class="slider" id="phase_imp" step="0.01">
+                </p>
+                <div class="hide" id="width-container">
+                    <p>
+                        <label for="width_slider">Ширина импульса: <b><span id="width_out"></span> с</b></label>
+                        <input type="range" min="0.01" max="1.00" value="0.05" class="slider" id="width_slider" step="0.01">
+                    </p>
+                </div>
+                <div class="hide" id="period-container">
+                    <p>
+                        <label for="period_slider">Период импульса: <b><span id="period_out"></span> с</b></label>
+                        <input type="range" min="0.05" max="1.00" value="0.10" class="slider" id="period_slider" step="0.01">
+                    </p>
+                </div>
+                <div class="hide" id="sigma-container">
+                    <p>
+                        <label for="sigma_slider">Среднеквадратичное отклонение: <b><span id="sigma_out"></span> с</b></label>
+                        <input type="range" min="0.01" max="1.00" value="0.10" class="slider" id="sigma_slider" step="0.01">
+                    </p>
+                </div>
+                <p>
+                <label for="dft-button-imp">Дискретное преобразование Фурье</label>
+                <label class="switch">
+                    <input type="checkbox" id="dft-button-imp">
+                    <span class="toggle"></span>
+                </label>
+                </p>
+            </div>
+        </div>
+        <div class="text-container">
+            <p>
+                Тем не менее, существует ещё один класс сигналов. 
+                Если рассматривать их обобщённо, они напоминают 
+                периодические сигналы, но таковыми не являются.
+                Наиболее известный пример из этого класса – функции Уолша или Адамара,
+                которые нашли применение в самых разных областях: от астрономии до цифровой электроники.
+                Преобразование Фурье для таких сигналов оказывается неэффективным,
+                 так как функции являются ангармоничными и не содержат чёткой частотной структуры.
+            </p>
+            <p>
+                Решением является использование альтернативного базиса разложения – преобразования Уолша–Адамара.
+                Другой особенностью такого преобразование является то что они образуют полный базис, 
+                если длина всех сигналов в базисе равна между собой и равна 2<sup>n</sup>.
+            </p>
+            <p>
+                Подробнее о применении этого подхода для обнаружения шин питания в облучённых микросхемах RAM 
+                вы можете прочитать в нашей <a href="https://doi.org/10.1016/j.microrel.2024.115398">научной статье</a>.
+</p>
+        </div>
+        <div class="graph-object-container">
+            <div class="slidecontainer">
+                <p>
+                    <label for="sequency_slider">Частность: <b><span id="out_sequency"></span></b></label>
+                    <input type="range" min="1" max="128" value="10" class="slider" id="sequency_slider" step="1">
+                </p>
+                <p>
+                    <label for="dft-button-walsh">Дискретное преобразование Фурье</label>
+                    <label class="switch">
+                        <input type="checkbox" id="dft-button-walsh">
+                        <span class="toggle"></span>
+                    </label>
+                </p>
+            </div>
+            <div class="graphcontainer">
+                <p>
+                    <div id="plot3"></div>
+                </p>
+            </div>
+        </div>
+    </div>
+
+<script type="text/javascript" src="static/signal-generation.js"></script>
+
+{% endblock %}

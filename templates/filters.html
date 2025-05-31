@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block style %}{% endblock %}
+
+{% block content %}
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filters</title>
+    <script src="https://cdn.plot.ly/plotly-3.0.1.min.js" charset="utf-8"></script>
+</head>
+
+<body>
+    <div class="main-container">
+        <div class="text-container">
+            <h1>Шумы и фильтры</h1>
+            <p>Этот раздел посвящен фильтрам. Здесь можно применить различные фильтры к зашумлённому сигналу 
+            и посмотреть на результат.</p>
+        </div>
+        <div class="text-container">
+            <h2>Шумы</h2>
+            <p>Шум - это случайный сигнал, который может быть добавлен к любому другому сигналу. 
+                Он может быть использован для моделирования реальных условий, в которых сигнал искажен.
+                Различают несколько типов шупов в зависимости от их спектральной характеристики.</p>
+        </div>
+        <div class="graph-object-container">
+            <div class="slidecontainer">
+                Тип шума:
+                <div class="button_list">
+                    <button class="type_noise selected" value="white">Белый</button>
+                    <button class="type_noise" value="blue">Синий</button>
+                    <button class="type_noise" value="violet">Фиолетовый</button>
+                    <button class="type_noise" value="red">Красный</button>
+                    <button class="type_noise" value="pink">Розовый</button>
+                </div>
+                
+                <p><label for="sigma_slider">Среднеквадратичное отклонение шума: <b><span id="sigma_out"></span></b></label>
+                <input type="range" min="0.01" max="1.00" value="0.10" class="slider" id="sigma_slider" step="0.01"></p>
+
+                <p><label for="dft-noise">Дискретное преобразование Фурье</label>
+                <label class="switch">
+                    <input type="checkbox" id="dft-noise">
+                    <span class="toggle "></span>
+                </label></p>
+            </div>
+
+            <div class="graphcontainer">
+                <p><div id="plot4"></div></p>
+            </div>
+        </div>
+
+        <div class="text-container">
+            <h2>Фильтры</h2>
+            <p>Существует два типа фильтров без обратной связи (КИХ) и с обратной связью (БИХ).
+            БИХ фильтры имеют более острые передаточные характеристики,
+            но обладают задержкой сигнала.</p>
+            <h3>Оконный метод генерации КИХ фильтров</h3>
+            <p>Оконный метод проектирования цифровых фильтров - это 
+                способ получить фильтр с конечной импульсной характеристикой. 
+                Передаточная характеристика идеального фильтра теоретически бесконечна.
+                Поэтому для практической реализации вводится окно - функция, которая обрезает передаточную характеристику.
+                Если произвести обрезание до длины равной порядку фильтра +1, то это равносильно прямоугольному окну.
+                В таком случае АЧХ фильтра будет обладать большими пульсациями. Применение различных окон 
+                позволяет изменить передатачную функцию фильтра. То есть это свёртка коэффициентов фильтра с функцией окна.</p>
+
+            <p>Выбор типа окна определяется требуемым балансом между шириной основной 
+                полосы и подавлением боковых лепестков. Более «мягкие» окна уменьшают уровень 
+                боковых лепестков, снижая спектральные искажения, 
+                но расширяют главную полосу пропускания, уменьшая резкость фильтра.</p>
+            <h3>Порядок фильтра</h3>
+                <p>
+                Порядок фильтра - это количество коэффициентов или длина оконной функции. 
+                Он напрямую связан с временем задержки и физическим размером фильтра.
+                Чем больше порядок, тем острее его переходная характеристика. Фильтр нулевого порядка - это сам сигнал.</p>
+            <p>Для фильтров с полосой пропускания, включающей частоту Найквиста, 
+                таких как высокочастотные и режекторные фильтры, порядок должен быть нечётным. </p>
+        </div>
+        
+        <div class="graph-object-container">
+            <div class="graphcontainer">
+                <p><div id="plot5"></div></p>
+            </div>
+
+            <div class="slidecontainer">
+                Тип импульсной характеристики:
+                <div class="button_list">
+                    <button class="type_impulse selected" value="fir">КИХ</button>
+                    <button class="type_impulse" value="iir">БИХ</button>
+                </div>
+                <div class="hide" id="type_filter-container">
+                    Тип фильтра:
+                    <div class="button_list">
+                        <button class="type_iir selected" value="butter">Баттерворт</button>
+                        <button class="type_iir" value="cheby1">Чебышев I</button>
+                        <button class="type_iir" value="cheby2">Чебышев II</button>
+                        <button class="type_iir" value="ellip">Элипсоидный</button>
+                        <button class="type_iir" value="bessel">Бессель</button>
+                    </div>
+                </div>
+                <div class="hide" id="order_slider_iir-container">
+                <p><label for="order_slider_iir">Порядок: <b><span id="order_out_iir"></span></b></label>
+                    <input type="range" min="1" max="20" value="10" class="slider" id="order_slider_iir" step="1"></p>
+                </div>
+                <div class="hide active" id="type_window-container">
+                    Тип окна:
+                    <div class="button_list">
+                        <button class="type_window selected" value="hamming">Хэминга</button>
+                        <button class="type_window" value="nuttall">Натталла</button>
+                        <button class="type_window" value="triang">Треугольное</button>
+                        <button class="type_window" value="boxcar">Квадратное</button>
+                        <button class="type_window" value="cosine">Косинусное</button>
+                    </div>
+                    <div class="hide active" id="order_slider_fir-container">
+                        <p><label for="order_slider">Порядок: <b><span id="order_out"></span></b></label>
+                            <input type="range" min="1" max="50" value="10" class="slider" id="order_slider" step="1"></p>
+                        </div>
+                </div>
+
+                
+
+                Режим фильтрации:
+                <div class="button_list">
+                    <button class="regime_filter selected" value="lowpass">Низкочастотный</button>
+                    <button class="regime_filter" value="highpass">Высокочастотный</button>
+                    <button class="regime_filter" value="bandpass">Полосовой</button>
+                    <button class="regime_filter" value="bandstop">Режекторный</button>
+                </div>
+
+                <div class="hide" id="regime_left-container">
+                    <p><label for="cut_of_left_slider">Левая отсечка: <b><span id="cut_of_left_out"></span> Гц</b></label>
+                        <input type="range" min="1" max="150" value="10" class="slider" id="cut_of_left_slider" step="1"></p>
+                </div>
+                
+                <div class="hide active" id="regime_right-container">
+                <p><label for="cut_of_right_slider">Правая отсечка: <b><span id="cut_of_right_out"></span> Гц</b></label>
+                    <input type="range" min="1" max="150" value="50" class="slider" id="cut_of_right_slider" step="1"></p>
+                </div>
+
+            </div>
+        </div>
+        <div class="text-container">
+            <p>
+                Ниже отфильтруем сигнал, сгенерированным фильтром выше.
+            </p>
+        </div>
+        <div class="graph-object-container">
+            <div class="slidecontainer">
+                Тип сигнала:
+                <div class="button_list">
+                    <button class="type_signal selected" value="sine">Синус</button>
+                    <button class="type_signal" value="meandr">Меандр</button>
+                    <button class="type_signal" value="sawtooth">Пила</button>
+                    <button class="type_signal" value="triangle">Треугольник</button>
+                </div>
+                <p>
+                    <label for="frequency_slider">Частота: <b><span id="out_frequency"></span> Гц</b></label>
+                    <input type="range" min="1" max="100" value="20" class="slider" id="frequency_slider" step="1">
+                </p>
+                <p>
+                    <label for="phase_signal">Фаза: <b><span id="out_phase"></span> с</b></label>
+                    <input type="range" min="0.00" max="1" value="0" class="slider" id="phase_signal" step="0.01">
+                </p>
+                <p>
+                    <label for="chirp-button">Линейный чирп</label>
+                    <label class="switch">
+                        <input type="checkbox" id="chirp-button">
+                        <span class="toggle "></span>
+                    </label>               
+                </p>
+
+                <div class="hide" id="chirp-container">
+                    <p>
+                        <label for="chirp_slider">Коэффициент линейного чирпа: <b><span id="chirp_out"></span> Гц<sup>2</sup></b></label>
+                        <input type="range" min="1" max="50" value="2" class="slider" id="chirp_slider" step="1">
+                    </p>
+                </div>
+                Тип шума:
+                <div class="button_list">
+                    <button class="type_noise_signal selected" value="white">Белый</button>
+                    <button class="type_noise_signal" value="blue">Синий</button>
+                    <button class="type_noise_signal" value="violet">Фиолетовый</button>
+                    <button class="type_noise_signal" value="red">Красный</button>
+                    <button class="type_noise_signal" value="pink">Розовый</button>
+                </div>
+            
+                <p><label for="sigma_slider_filter">Среднеквадратичное отклонение шума: <b><span id="sigma_out_filter"></span></b></label>
+                <input type="range" min="0.1" max="3.00" value="1" class="slider" id="sigma_slider_filter" step="0.1"></p>
+                <p>
+                    <label for="dft-button-signal">Дискретное преобразование Фурье</label>
+                    <label class="switch">
+                        <input type="checkbox" id="dft-button-signal">
+                        <span class="toggle "></span>
+                    </label>
+                </p>
+            </div>
+
+            <div class="graphcontainer">
+                <p>
+                    <div id="plot6"></div>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript" src="static/filters.js"></script>
+
+{% endblock %}

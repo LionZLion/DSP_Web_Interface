@@ -1,0 +1,33 @@
+.vertical-menu {
+    width: 150px;
+    position: fixed;
+    height: 100%;
+    background-color: #242424;
+    color: white;
+}   
+
+.vertical-menu a {
+    display: block;
+    padding: 12px;
+    text-decoration: none;
+    color: white;
+    transition: 0.3s;
+}
+
+/* Стиль для активной ссылки */
+.vertical-menu a.active {
+    text-align: center;
+    background-color: #522685;
+    color: white;
+}
+
+.vertical-menu a:hover {
+    background-color: #8d58c9;
+}
+
+.content {
+    margin-left: 150px;
+    min-height: 100vh;
+    background-color: #444444;
+    color: white;
+}
